@@ -1,4 +1,5 @@
-import { Outlet, NavLink, Link, Form, redirect, useLoaderData } from "react-router-dom";
+import { useEffect } from "react";
+import { Outlet, NavLink, useNavigation, Form, redirect, useLoaderData, useSubmit } from "react-router-dom";
 import { getContacts, createContact } from "../contacts";
 
 export async function action() {
@@ -6,31 +7,54 @@ export async function action() {
     return redirect(`/contacts/${contact.id}/edit`);
   }
 
+export async function loader({ request }) {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+  const contacts = await getContacts(q);
+  return { q, contacts };
+}
+
 export default function Root() {
-    const { contacts } = useLoaderData();
+    const { q, contacts } = useLoaderData();
+    const navigation = useNavigation();
+    useEffect(() => {
+      document.getElementById("q").value = q;
+    }, [q]);
+    const submit = useSubmit();
+    const searching =
+      navigation.location &&
+      new URLSearchParams(navigation.location.search).has(
+        "q"
+      );
+
   return (
     <>
       <div id="sidebar">
         <h1>React Router Contacts</h1>
         <div>
-          <form id="search-form" role="search">
+          <Form id="search-form" role="search">
             <input
               id="q"
+              className={searching ? "loading" : ""}
               aria-label="Search contacts"
               placeholder="Search"
               type="search"
               name="q"
+              defaultValue={q}
+              onChange={(event) => {
+                submit(event.currentTarget.form);
+              }}              
             />
             <div
               id="search-spinner"
               aria-hidden
-              hidden={true}
+              hidden={!searching}
             />
             <div
               className="sr-only"
               aria-live="polite"
             ></div>
-          </form>
+          </Form>
           <Form method="post">
             <button type="submit">New</button>
           </Form>
@@ -69,12 +93,8 @@ export default function Root() {
           )}
         </nav>
       </div>
-      <div id="detail"><Outlet /></div>
+      <div id="detail" 
+        className={navigation.state === 'loading' ? 'loading' : ''}><Outlet /></div>
     </>
   );
 }
-
-export async function loader() {
-    const contacts = await getContacts();
-    return { contacts };
-  }
