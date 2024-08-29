@@ -1,5 +1,13 @@
 import { useEffect } from "react";
-import { Outlet, NavLink, useNavigation, Form, redirect, useLoaderData, useSubmit } from "react-router-dom";
+import { 
+  Outlet, 
+  NavLink, 
+  useNavigation, 
+  Form, 
+  redirect, 
+  useLoaderData, 
+  useSubmit 
+} from "react-router-dom";
 import { getContacts, createContact } from "../contacts";
 
 export async function action() {
@@ -26,7 +34,6 @@ export default function Root() {
       new URLSearchParams(navigation.location.search).has(
         "q"
       );
-
   return (
     <>
       <div id="sidebar">
@@ -42,7 +49,8 @@ export default function Root() {
               name="q"
               defaultValue={q}
               onChange={(event) => {
-                submit(event.currentTarget.form);
+                const isFirstSearch = q == null;
+                submit(event.currentTarget.form, {replace: !isFirstSearch});
               }}              
             />
             <div
